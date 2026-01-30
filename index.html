@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIBE CODING</title>
+    <meta name="theme-color" content="#e0e0e0">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&family=Syne:wght@400;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+    <style>
+        :root {
+            --bg-color: #e0e0e0;
+            --text-color: #0a0a0a;
+            --accent-color: #ff3c00;
+        }
+
+        html,
+        body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            cursor: none;
+            font-family: 'Pretendard', sans-serif;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        html {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        body.locked {
+            overflow: hidden;
+        }
+
+        .font-display {
+            font-family: 'Syne', 'Pretendard', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', 'Pretendard', monospace;
+        }
+
+        /* 커서 */
+        #cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+            will-change: transform, width, height;
+        }
+
+        body.hovering #cursor {
+            width: 60px;
+            height: 60px;
+            background: #fff;
+        }
+
+        body.hide-cursor #cursor {
+            opacity: 0;
+        }
+
+        /* 스크롤바 */
+        #custom-scrollbar-track {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 6px;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.05);
+            z-index: 9000;
+        }
+
+        #custom-scrollbar-thumb {
+            width: 100%;
+            height: 0%;
+            background: var(--accent-color);
+            display: block;
+        }
+
+        /* --- UI 컴포넌트 --- */
+        #intro-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: #0a0a0a;
+            z-index: 6000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loader-wrapper {
+            width: 300px;
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .loader-box {
+            width: 100%;
+            height: 12px;
+            background: #333;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loader-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--accent-color);
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .intro-content {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(30px);
+        }
+
+        #menu-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: var(--accent-color);
+            z-index: 5000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+        }
+
+        .menu-link {
+            font-family: 'Syne', sans-serif;
+            font-size: 8vw;
+            line-height: 0.9;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: black;
+            text-decoration: none;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .menu-link:hover {
+            color: white;
+            -webkit-text-stroke: 2px black;
+        }
+
+        #detail-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 5500;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #detail-overlay.active {
+            pointer-events: auto;
+            opacity: 1;
+        }
+
+        #expanded-card {
+            background: #fff;
+            border: 4px solid #000;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 20px 20px 0px var(--accent-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 닫기 버튼 */
+        #close-detail {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 100;
+            background: black;
+            color: white;
+            border: 2px solid white;
+            padding: 0.5rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+
+        #close-detail:hover {
+            background: #ff3c00;
+            border-color: #ff3c00;
+        }
+
+        /* 뷰 컨테이너들 */
+        .view-container {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+        }
+
+        #normal-detail-view {
+            display: flex;
+        }
+
+        #roulette-game-view {
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            overflow: hidden;
+        }
+
+        #excuse-gen-view {
+            align-items: center;
+            justify-content: center;
+            background: #ff3c00;
+            overflow: hidden;
+            padding: 2rem;
+        }
+
+        /* 새로운 뷰: 배달 후회, 씻기 타이밍 */
+        #delivery-regret-view,
+        #wash-timing-view {
+            background: #000;
+            color: #fff;
+            padding: 3rem 2rem;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        #emotion-trash-view {
+            background: #0a0a0a;
+            color: white;
+            padding: 3rem 2rem;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        /* 🎮 GAME ZONE 스타일 */
+        #game-zone-view {
+            background: #fff;
+            color: #000;
+            padding: 3rem 2rem;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        #game-menu-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .game-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .game-card {
+            background: #000;
+            color: #fff;
+            border: 4px solid #000;
+            padding: 2rem;
+            min-height: 250px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px) rotate(1deg);
+            box-shadow: 10px 10px 0px var(--accent-color);
+        }
+
+        .game-card.white {
+            background: #fff;
+            color: #000;
+            border: 4px solid #000;
+        }
+
+        /* 💸 용돈 정하기 게임 */
+        #pocket-money-game {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #pocket-setup {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+        }
+
+        .pocket-input {
+            width: 100%;
+            max-width: 300px;
+            padding: 10px;
+            border: 2px solid #000;
+            margin-bottom: 10px;
+            font-family: 'Pretendard';
+        }
+
+        .pocket-btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .pocket-type-btn {
+            padding: 10px 20px;
+            border: 2px solid #000;
+            background: #fff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .pocket-type-btn.selected {
+            background: #000;
+            color: #fff;
+        }
+
+        #pocket-play {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .bg-seollal {
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+        }
+
+        .bg-chuseok {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+        }
+
+        .bg-normal {
+            background: #f0f0f0;
+        }
+
+        .rps-area {
+            display: flex;
+            gap: 2rem;
+            font-size: 5rem;
+            margin: 2rem 0;
+        }
+
+        .rps-card {
+            width: 150px;
+            height: 150px;
+            border: 4px solid #000;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            font-size: 4rem;
+        }
+
+        #user-hand-display {
+            font-size: 1.5rem;
+            font-weight: 900;
+            transition: font-size 0.2s;
+        }
+
+        .rps-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .rps-btn {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+            border: 3px solid #000;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .rps-btn:hover {
+            background: var(--accent-color);
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .score-board {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000;
+            color: #fff;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-family: 'JetBrains Mono';
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+        }
+
+        #decision-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(5px);
+        }
+
+        .decision-box {
+            background: #fff;
+            border: 4px solid #000;
+            padding: 2rem;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 10px 10px 0px var(--accent-color);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .decision-title {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            font-family: 'Syne';
+            text-transform: uppercase;
+        }
+
+        .decision-text {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .decision-btn-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .decision-btn {
+            flex: 1;
+            padding: 15px;
+            border: 3px solid #000;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #fff;
+        }
+
+        .decision-btn:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .decision-btn.primary {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
+
+        .decision-btn.primary:hover {
+            background: #fff;
+            color: var(--accent-color);
+        }
+
+        /* 감정 쓰레기통 카드 */
+        .trash-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .trash-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .trash-card {
+            background-color: #000 !important;
+            border: 2px solid #fff !important;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 250px;
+            cursor: pointer;
+            opacity: 1 !important;
+        }
+
+        .trash-card:hover {
+            border-color: var(--accent-color) !important;
+            box-shadow: 0px 0px 20px rgba(255, 60, 0, 0.5);
+        }
+
+        .trash-card h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: #fff !important;
+            opacity: 1 !important;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+        }
+
+        .trash-card p {
+            font-size: 1rem;
+            color: #fff !important;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+            flex-grow: 1;
+            opacity: 0.9 !important;
+        }
+
+        .trash-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            background: #fff;
+            color: #000 !important;
+            padding: 4px 8px;
+            display: inline-block;
+            margin-bottom: 15px;
+            opacity: 1 !important;
+            font-weight: bold;
+        }
+
+        .trash-card:hover .trash-tag {
+            background: var(--accent-color);
+            color: #fff !important;
+        }
+
+        .feature-box {
+            width: 100%;
+            background: #000;
+            border: 2px solid #fff;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .feature-input {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 1rem;
+            font-family: 'Pretendard';
+            font-size: 1.1rem;
+            resize: none !important;
+            min-height: 80px;
+        }
+
+        .feature-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: #000;
+        }
+
+        .feature-result {
+            background: #111;
+            padding: 2rem;
+            border: 2px solid #fff;
+            color: #fff;
+            font-family: 'Pretendard';
+            line-height: 1.6;
+            height: auto;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .rest-highlight {
+            color: var(--accent-color);
+            font-weight: 900;
+            font-size: 1.2rem;
+            display: block;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* 핑계 생성기 */
+        .excuse-container {
+            width: 100%;
+            max-width: 500px;
+            background: #fff;
+            border: 4px solid #000;
+            padding: 2rem;
+            box-shadow: 10px 10px 0px #000;
+        }
+
+        .excuse-select-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .excuse-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #000;
+            font-family: 'Pretendard';
+            font-weight: bold;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .excuse-btn.selected {
+            background: #000;
+            color: #fff;
+        }
+
+        .excuse-result-box {
+            min-height: 120px;
+            border: 2px solid #000;
+            background: #f5f5f5;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono';
+            font-size: 1.1rem;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .chat-icon-svg {
+            position: absolute;
+            top: -40px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            animation: float-icon 3s infinite ease-in-out;
+        }
+
+        @keyframes float-icon {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* 돔 트레이 */
+        #dome-container {
+            display: none;
+            position: relative;
+            width: 300px;
+            height: 320px;
+            justify-content: center;
+            align-items: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .silver-dome {
+            width: 260px;
+            height: 160px;
+            background: linear-gradient(135deg, #fff 0%, #dcdcdc 50%, #888 100%);
+            border-radius: 130px 130px 0 0;
+            border: 2px solid #666;
+            border-bottom: 8px solid #444;
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            box-shadow: inset 10px 10px 20px rgba(255, 255, 255, 0.8);
+        }
+
+        .dome-handle {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 30% 30%, #fff, #888);
+            border-radius: 50%;
+            border: 2px solid #555;
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .dome-plate {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 20px;
+            background: #222;
+            border-radius: 50%;
+            z-index: 10;
+            box-shadow: 0px 15px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .food-reveal {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            text-align: center;
+            z-index: 15;
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            items-center;
+        }
+
+        /* 모던 쓰레기통 애니메이션 */
+        .trash-container {
+            position: absolute;
+            right: -10px;
+            bottom: 10px;
+            width: 120px;
+            height: 160px;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        .trash-can-modern {
+            position: absolute;
+            bottom: 0;
+            right: 20px;
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(90deg, #444, #222);
+            border-radius: 0 0 8px 8px;
+            z-index: 10;
+        }
+
+        .trash-can-modern::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: #555;
+            border-radius: 50%;
+            border: 1px solid #222;
+        }
+
+        .trash-emoji {
+            position: absolute;
+            font-size: 20px;
+            top: -20px;
+            left: 40px;
+            animation: modern-drop 2.5s infinite ease-in;
+            opacity: 0;
+            z-index: 5;
+        }
+
+        .trash-emoji:nth-child(2) {
+            animation-delay: 0.8s;
+            left: 50px;
+            font-size: 24px;
+        }
+
+        .trash-emoji:nth-child(3) {
+            animation-delay: 1.6s;
+            left: 30px;
+            font-size: 18px;
+        }
+
+        @keyframes modern-drop {
+            0% {
+                top: 0px;
+                opacity: 0;
+                transform: scale(1);
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                top: 80px;
+                opacity: 1;
+                transform: scale(0.6) rotate(180deg);
+            }
+
+            95% {
+                top: 90px;
+                opacity: 0;
+            }
+
+            100% {
+                top: 90px;
+                opacity: 0;
+            }
+        }
+
+        /* 캐릭터 */
+        .eating-char-wrap {
+            position: relative;
+            width: 108px;
+            height: 108px;
+            margin: 0 auto;
+            z-index: 10;
+        }
+
+        .eating-char-wrap::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: #000;
+            border-radius: 50%;
+        }
+
+        .eating-char-front {
+            position: absolute;
+            inset: 4px;
+            background: #ffdb00;
+            border-radius: 50%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .char-mouth {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 40px;
+            background: #000;
+            border-radius: 0 0 50px 50px;
+            animation: mouth-move 0.2s infinite alternate;
+            z-index: 2;
+        }
+
+        @keyframes mouth-move {
+            0% {
+                height: 10px;
+                border-radius: 10px;
+            }
+
+            100% {
+                height: 55px;
+                border-radius: 0 0 50px 50px;
+            }
+        }
+
+        .char-hand {
+            position: absolute;
+            top: 65%;
+            width: 25px;
+            height: 25px;
+            background: #fff;
+            border: 2px solid #000;
+            border-radius: 50%;
+            z-index: 3;
+        }
+
+        .char-hand.left {
+            left: 0px;
+            animation: feed-left 0.4s infinite linear;
+        }
+
+        .char-hand.right {
+            right: 0px;
+            animation: feed-right 0.4s infinite linear;
+            animation-delay: 0.2s;
+        }
+
+        @keyframes feed-left {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(35px, -10px);
+            }
+
+            100% {
+                transform: translate(0, 0);
+            }
+        }
+
+        @keyframes feed-right {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(-35px, -10px);
+            }
+
+            100% {
+                transform: translate(0, 0);
+            }
+        }
+
+        .enter-btn {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+            padding: 1.5rem 4rem;
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: none;
+        }
+
+        .enter-btn:hover {
+            background: white;
+            color: black;
+            transform: scale(1.05);
+            box-shadow: 8px 8px 0px var(--accent-color);
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            background: #000;
+            color: #fff;
+            font-weight: bold;
+            border: 2px solid #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .action-btn.trash-btn {
+            background: #333;
+            border-color: #555;
+        }
+
+        .action-btn.trash-btn:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .content-wrapper {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+
+        .brutal-card {
+            background: #fff;
+            border: 3px solid #000;
+            position: relative;
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        .brutal-card.black-bg {
+            background: #0a0a0a;
+        }
+
+        .brutal-card.orange-bg {
+            background: #ff3c00;
+        }
+
+        .brutal-card.white-bg {
+            background: #fff;
+        }
+
+        .brutal-shadow {
+            box-shadow: 8px 8px 0px #000;
+        }
+
+        .brutal-shadow:hover {
+            box-shadow: 12px 12px 0px var(--accent-color);
+        }
+
+        .marquee-container {
+            width: 100vw;
+            overflow: hidden;
+            white-space: nowrap;
+            border-bottom: 3px solid #000;
+            background: var(--accent-color);
+            margin-left: calc(-50vw + 50%);
+        }
+
+        .roll-container {
+            overflow: hidden;
+            height: auto;
+            line-height: 1;
+            position: relative;
+            display: block;
+        }
+
+        .roll-inner {
+            display: block;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .roll-copy {
+            display: block;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            color: var(--accent-color);
+        }
+
+        .group:hover .roll-inner {
+            transform: translateY(-100%);
+        }
+
+        .black-bg .roll-copy {
+            color: #fff;
+        }
+
+        .orange-bg .roll-copy {
+            color: #fff;
+        }
+
+        .white-bg .roll-copy {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+
+<body class="antialiased locked">
+
+    <div id="cursor"></div>
+    <div id="custom-scrollbar-track">
+        <div id="custom-scrollbar-thumb"></div>
+    </div>
+
+    <div id="intro-overlay">
+        <div class="loader-wrapper">
+            <div class="loader-box">
+                <div class="loader-bar"></div>
+            </div>
+        </div>
+        <div class="intro-content flex flex-col items-center">
+            <div class="font-mono text-white mb-4 text-xs tracking-[0.5em] opacity-70">SYSTEM_READY</div>
+            <button class="enter-btn hover-trigger" id="enterBtn">Welcome</button>
+        </div>
+    </div>
+
+    <div id="menu-overlay">
+        <div class="absolute inset-0 opacity-10 pointer-events-none"
+            style="background-image: linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px); background-size: 40px 40px;">
+        </div>
+        <nav class="flex flex-col items-center gap-4 z-10">
+            <a href="#" class="menu-link hover-trigger">HOME</a>
+            <a href="#" class="menu-link hover-trigger">ABOUT US</a>
+            <a href="#" class="menu-link hover-trigger">PROJECTS</a>
+            <a href="#" class="menu-link hover-trigger">CONTACT</a>
+        </nav>
+        <div class="absolute bottom-10 font-mono text-xs font-bold tracking-widest">CLICK MENU BUTTON TO CLOSE</div>
+    </div>
+
+    <div id="detail-overlay">
+        <div id="expanded-card">
+            <button id="close-detail" class="hover-trigger">[ CLOSE_X ]</button>
+
+            <div id="normal-detail-view" class="view-container">
+                <div class="h-[40%] w-full relative border-b-4 border-black bg-gray-200">
+                    <img id="detail-img" src="" class="w-full h-full object-cover">
+                    <div class="absolute bottom-0 left-0 bg-black text-white px-4 py-2 font-display text-4xl font-bold uppercase"
+                        id="detail-title">TITLE</div>
+                </div>
+                <div class="detail-content-area bg-white p-8">
+                    <p id="detail-desc" class="mb-6 font-bold text-2xl tracking-tight">Subtitle goes here.</p>
+                    <div class="text-base opacity-80 space-y-4 text-lg" id="detail-body-text">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="delivery-regret-view" class="view-container">
+                <div class="flex flex-col items-center justify-center h-full max-w-[600px] mx-auto text-center">
+                    <h2 class="font-display text-4xl font-black mb-4">배달 후회 판독기</h2>
+                    <p class="mb-8 opacity-70">현재 시간과 날씨를 분석하여 당신의 지갑을 지켜드립니다.</p>
+                    <button id="btn-calc-regret" class="action-btn">후회 확률 계산하기</button>
+                    <div id="delivery-result" class="mt-8 text-2xl font-bold text-[#ff3c00]"></div>
+                </div>
+            </div>
+
+            <div id="wash-timing-view" class="view-container">
+                <div class="flex flex-col items-center justify-center h-full max-w-[600px] mx-auto text-center">
+                    <h2 class="font-display text-4xl font-black mb-4">지금 씻을 타이밍인가?</h2>
+                    <p class="mb-8 opacity-70">고도의 귀차니즘 알고리즘이 최적의 타이밍을 알려줍니다.</p>
+                    <div class="flex gap-4 mb-6 w-full">
+                        <button class="action-btn wash-opt" data-val="out">나갈 예정</button>
+                        <button class="action-btn wash-opt" data-val="home">집콕 예정</button>
+                        <button class="action-btn wash-opt" data-val="back">방금 귀가</button>
+                    </div>
+                    <div id="wash-result" class="mt-8 text-2xl font-bold text-[#ff3c00]">상태를 선택해주세요.</div>
+                </div>
+            </div>
+
+            <div id="roulette-game-view" class="view-container">
+                <div id="roulette-stage" class="flex flex-col items-center">
+                    <div class="relative">
+                        <div class="roulette-wheel hover-trigger" id="wheel"
+                            onmouseenter="document.body.classList.add('hide-cursor')"
+                            onmouseleave="document.body.classList.remove('hide-cursor')"></div>
+                    </div>
+                    <h3 class="font-display text-3xl font-bold mt-8">룰렛을 눌러주세요!</h3>
+                    <p class="font-mono text-sm mt-2 opacity-60">CLICK TO SPIN</p>
+                </div>
+                <div id="dome-container">
+                    <div class="food-reveal">
+                        <h2 class="font-display text-5xl font-black uppercase mb-1" id="food-result">FOOD NAME</h2>
+                    </div>
+                    <div class="silver-dome" id="silver-dome">
+                        <div class="dome-handle"></div>
+                    </div>
+                    <div class="dome-plate"></div>
+                </div>
+                <button
+                    class="font-display text-lg font-bold border-2 border-black px-6 py-2 mt-4 hover:bg-[#ff3c00] hover:text-white hover:border-[#ff3c00] transition-colors"
+                    id="retry-btn" style="display:none;">별로야? 다시돌려</button>
+            </div>
+
+            <div id="excuse-gen-view" class="view-container">
+                <div class="excuse-container">
+                    <h2 class="font-display text-4xl font-black mb-6 text-center uppercase">Excuse<br>Generator</h2>
+                    <div class="mb-4">
+                        <label class="font-mono text-xs font-bold block mb-2">SITUATION</label>
+                        <div class="excuse-select-group" id="situation-opts">
+                            <button class="excuse-btn selected" data-val="late">지각/늦잠</button>
+                            <button class="excuse-btn" data-val="contact">연락 회피</button>
+                            <button class="excuse-btn" data-val="cancel">약속 취소</button>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="font-mono text-xs font-bold block mb-2">TARGET</label>
+                        <div class="excuse-select-group" id="target-opts">
+                            <button class="excuse-btn selected" data-val="professor">교수님</button>
+                            <button class="excuse-btn" data-val="friend">친구</button>
+                            <button class="excuse-btn" data-val="senior">선배</button>
+                            <button class="excuse-btn" data-val="lover">연인</button>
+                        </div>
+                    </div>
+                    <div class="excuse-result-box" id="excuse-output">핑계 생성 버튼을 눌러주세요...</div>
+                    <button class="action-btn mb-2" id="gen-excuse-btn">핑계 생성하기 [GENERATE]</button>
+                    <button class="font-mono text-xs w-full text-center hover:text-white underline"
+                        id="copy-excuse-btn">클립보드 복사 [COPY]</button>
+                </div>
+            </div>
+
+            <div id="game-zone-view" class="view-container">
+                <div id="game-menu-container" class="w-full max-w-[1000px] mx-auto">
+                    <div class="flex justify-between items-end mb-12 border-b-2 border-black pb-6">
+                        <div>
+                            <h2 class="font-display text-5xl font-black uppercase">GAME<br><span
+                                    class="text-[#ff3c00]">ZONE</span></h2>
+                        </div>
+                        <div class="font-mono text-xs border border-black px-3 py-1 text-black hover-trigger cursor-pointer"
+                            onclick="closeDetail()">EXIT</div>
+                    </div>
+                    <div class="game-grid">
+                        <div class="game-card group hover-trigger" data-game="pocket-money">
+                            <div>
+                                <span class="trash-tag" style="border-color:#fff; color:#fff !important;">GAME_01</span>
+                                <h4 style="color: white; font-weight: 800; font-size: 1.5rem; margin-bottom: 0.5rem;">용돈
+                                    정하기</h4>
+                                <p style="color: rgba(255,255,255,0.8);">명절, 특별한 날, 용돈 액수를 운에 맡기세요.<br>가위바위보로 인생 역전!</p>
+                            </div>
+                            <div class="font-mono text-xs text-white group-hover:text-[#ff3c00] transition-colors mt-4">
+                                [ PLAY NOW ]</div>
+                        </div>
+                        <div class="game-card white group hover-trigger" style="opacity:0.5; cursor:not-allowed;">
+                            <div><span class="trash-tag" style="border-color:#000; color:#000 !important;">인생 가챠</span>
+                                <h4 style="color:#000 !important;">COMING SOON</h4>
+                                <p style="color:#555 !important;">새로운 게임이 준비 중입니다.</p>
+                            </div>
+                            <div class="font-mono text-xs text-black mt-4">[ LOCKED ]</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="pocket-money-game">
+                    <div id="pocket-setup">
+                        <h2 class="font-display text-3xl font-black mb-6">POCKET MONEY SETUP</h2>
+                        <div class="w-full max-w-[400px] space-y-4">
+                            <div><label class="font-bold block mb-1">주는 사람</label><input type="text" id="giver-name"
+                                    class="pocket-input" placeholder="예: 삼촌"></div>
+                            <div><label class="font-bold block mb-1">받는 사람</label><input type="text" id="receiver-name"
+                                    class="pocket-input" placeholder="예: 나"></div>
+                            <div><label class="font-bold block mb-1">최대 금액</label><input type="number" id="max-money"
+                                    class="pocket-input" placeholder="예: 100000" value="100000"></div>
+                            <div>
+                                <label class="font-bold block mb-1">종류</label>
+                                <div class="pocket-btn-group">
+                                    <button class="pocket-type-btn selected" data-type="normal">일반</button>
+                                    <button class="pocket-type-btn" data-type="holiday">명절</button>
+                                    <button class="pocket-type-btn" data-type="special">특수</button>
+                                </div>
+                                <div id="holiday-options" class="pocket-btn-group" style="display:none;">
+                                    <button class="pocket-type-btn" data-holiday="seollal">설날</button>
+                                    <button class="pocket-type-btn" data-holiday="chuseok">추석</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="start-pocket-game" class="action-btn mt-6">게임 시작 [START]</button>
+                    </div>
+                    <div id="pocket-play" class="bg-normal">
+                        <div id="decision-overlay">
+                            <div class="decision-box">
+                                <div id="decision-title" class="decision-title">WIN!</div>
+                                <div id="decision-message" class="decision-text">현재 금액: 20,000원<br>계속 도전하시겠습니까?</div>
+                                <div class="decision-btn-group">
+                                    <button id="btn-stop-game" class="decision-btn">그만 받기 (STOP)</button>
+                                    <button id="btn-continue-game" class="decision-btn primary">계속 도전 (GO)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="score-board">
+                            <div class="text-sm opacity-70">현재 누적 금액</div>
+                            <div id="current-money" class="text-3xl font-bold text-[#ff3c00]">10,000원</div>
+                            <div id="streak-info" class="text-xs mt-1">연승: 0</div>
+                        </div>
+                        <div class="rps-area">
+                            <div id="cpu-hand" class="rps-card">🤖</div>
+                            <div class="font-black text-2xl flex items-center">VS</div>
+                            <div id="user-hand-display" class="rps-card" style="font-size:1.5rem; font-weight:900;">YOU
+                            </div>
+                        </div>
+                        <div id="game-message" class="text-xl font-bold mb-8 h-8 text-center">가위, 바위, 보!</div>
+                        <div class="rps-controls">
+                            <button class="rps-btn" data-choice="scissors">✌️</button>
+                            <button class="rps-btn" data-choice="rock">✊</button>
+                            <button class="rps-btn" data-choice="paper">🖐️</button>
+                        </div>
+                        <div id="double-event-notice"
+                            class="absolute top-20 bg-black text-white px-4 py-2 rounded-full hidden animate-bounce">
+                            🔥 다음 판 승리 시 2배! 🔥
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="emotion-trash-view" class="view-container">
+                <div
+                    class="flex justify-between items-end mb-12 border-b-2 border-white pb-6 max-w-[1200px] mx-auto w-full">
+                    <div>
+                        <h2 class="font-display text-4xl md:text-7xl font-black text-white uppercase leading-none">
+                            Emotion<br><span class="text-[#ff3c00] stroke-text"
+                                style="-webkit-text-stroke: 1px #ff3c00; color: transparent;">Trash Can</span></h2>
+                    </div>
+                    <div class="font-mono text-xs border border-white px-3 py-1 text-white hover-trigger cursor-pointer hover:bg-white hover:text-black transition-colors"
+                        id="trash-back-btn">BACK_TO_MENU</div>
+                </div>
+                <div id="trash-menu-container" class="trash-grid">
+                    <div class="trash-card group hover-trigger" data-tool="translator">
+                        <div><span class="trash-tag">FUNCTION_01</span>
+                            <h4>감정 번역기</h4>
+                            <p>날 것의 거친 감정을 사회적으로 용인되는 고급스러운 언어로 번역해줍니다.</p>
+                        </div>
+                        <div class="font-mono text-xs text-white group-hover:text-[#ff3c00] transition-colors mt-4">[
+                            CLICK TO START ]</div>
+                    </div>
+                    <div class="trash-card group hover-trigger" data-tool="diary">
+                        <div><span class="trash-tag">FUNCTION_02</span>
+                            <h4>기억 왜곡 일기</h4>
+                            <p>오늘 있었던 최악의 하루를 세상에서 가장 아름답고 문학적인 비극으로 포장해드립니다.</p>
+                        </div>
+                        <div class="font-mono text-xs text-white group-hover:text-[#ff3c00] transition-colors mt-4">[
+                            CLICK TO START ]</div>
+                    </div>
+                    <div class="trash-card group hover-trigger" data-tool="rest">
+                        <div><span class="trash-tag">FUNCTION_03</span>
+                            <h4>오늘은 쉬어도 될까</h4>
+                            <p>오늘의 날씨와 기분을 분석하여 당신이 아무것도 안 해도 되는 완벽한 명분을 만들어줍니다.</p>
+                        </div>
+                        <div class="font-mono text-xs text-white group-hover:text-[#ff3c00] transition-colors mt-4">[
+                            CLICK TO START ]</div>
+                    </div>
+                </div>
+                <div id="trash-feature-container">
+                    <div id="tool-ui-translator" class="feature-box" style="display:none;">
+                        <h3 class="font-display text-2xl text-white">감정 번역기 <span class="text-[#ff3c00]">v2.0</span>
+                        </h3>
+                        <p class="text-gray-400 text-sm">속마음을 입력하면 우아한 비즈니스 언어로 순화합니다.</p><textarea
+                            class="feature-input" placeholder="예: 아 진짜 팀장 개짜증나네 하..."></textarea><button
+                            id="btn-translate" class="action-btn">번역하기 [TRANSLATE]</button>
+                        <div class="feature-result">결과가 여기에 표시됩니다.</div>
+                    </div>
+                    <div id="tool-ui-diary" class="feature-box" style="display:none;">
+                        <h3 class="font-display text-2xl text-white">기억 왜곡 일기 <span class="text-[#ff3c00]">v2.0</span>
+                        </h3>
+                        <p class="text-gray-400 text-sm">최악의 하루를 입력하세요. 아름답게 포장해 드립니다.</p><textarea
+                            class="feature-input"
+                            placeholder="예: 오늘 길 가다가 넘어져서 무릎 깨지고 커피 다 쏟음. 최악이다."></textarea><button id="btn-distort"
+                            class="action-btn">왜곡하기 [DISTORT]</button>
+                        <div class="feature-result">결과가 여기에 표시됩니다.</div>
+                    </div>
+                    <div id="tool-ui-rest" class="feature-box" style="display:none;">
+                        <h3 class="font-display text-2xl text-white">휴식 허가 판독기 <span class="text-[#ff3c00]">v2.0</span>
+                        </h3>
+                        <p class="text-gray-400 text-sm">지금 당신의 상태를 입력하세요. (비워도 됩니다)</p>
+                        <div class="flex gap-2"><input id="input-rest" type="text" class="feature-input"
+                                style="min-height: 50px;" placeholder="현재 기분 (예: 무기력, 피곤)"></div><button
+                            id="btn-rest-check" class="action-btn">판독하기 [CHECK]</button>
+                        <div class="feature-result text-center justify-center flex-col"><span
+                                class="text-gray-500 mb-2">판독 결과</span>
+                            <div id="rest-result-text">버튼을 눌러 확인하세요.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content" class="opacity-0 w-full overflow-hidden">
+        <nav class="fixed top-0 w-full flex justify-between items-center p-6 border-b-4 border-black bg-[#e0e0e0] z-[5500] box-border transition-colors duration-300"
+            id="navbar">
+            <div class="font-display font-bold text-2xl tracking-tighter hover-trigger">VIBE.CODE</div>
+            <div class="font-mono text-sm hover-trigger cursor-pointer select-none" id="menuToggle">[ MENU ]</div>
+        </nav>
+
+        <header
+            class="pt-32 pb-20 min-h-[100vh] flex flex-col justify-center border-b-4 border-black w-full relative overflow-hidden">
+            <div class="content-wrapper relative z-10">
+                <h1 class="font-display font-extrabold uppercase hover-trigger leading-tight parallax-text"
+                    style="font-size: clamp(3rem, 9.5vw, 9rem);">
+                    <div class="block mb-[-0.05em]">당신의 이야기</div>
+                    <div class="block text-transparent stroke-text"
+                        style="-webkit-text-stroke: 2px black; -webkit-text-fill-color: transparent;">소소한 공간</div>
+                </h1>
+                <p class="font-mono mt-10 max-w-xl text-base md:text-lg font-bold border-l-4 border-black pl-4 leading-relaxed"
+                    style="font-size: clamp(1rem, 1.5vw, 1.25rem);">
+                    말하고, 남기지 마세요
+                </p>
+            </div>
+            <div class="absolute right-0 top-1/4 opacity-10 font-display text-[15vw] font-black pointer-events-none parallax-bg leading-none"
+                style="line-height: 0.9;">DEEP LISTENING<br>SOFTLY</div>
+        </header>
+
+        <div class="marquee-container py-4">
+            <div class="marquee-content font-mono text-xl font-bold pl-4">DELIVERY CHECK /// WASH TIMING /// EXCUSE
+                GENERATOR /// GAME ZONE /// EMOTION TRASH CAN /// YUM YUM ROULETTE ///</div>
+        </div>
+
+        <section class="py-24 bg-white w-full">
+            <div class="content-wrapper grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="brutal-card col-span-2 h-[400px] p-6 brutal-shadow group hover-trigger scroll-reveal"
+                    data-tilt data-type="delivery">
+                    <div class="font-mono text-xs border-b-2 border-black pb-2 flex justify-between z-20 relative">
+                        <span></span><span>MAIN</span></div>
+                    <div class="relative z-20 mix-blend-difference text-white pointer-events-none mt-auto">
+                        <h3 class="font-display text-4xl font-bold uppercase mb-2 leading-none">배달 후회<br>판독기</h3>
+                        <p class="font-mono text-sm">Impulse Control</p>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=1000&auto=format&fit=crop"
+                        class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700 ease-in-out z-10 pointer-events-none">
+                </div>
+                <div class="brutal-card black-bg col-span-2 h-[400px] p-6 brutal-shadow group hover-trigger scroll-reveal"
+                    data-tilt data-type="wash">
+                    <div
+                        class="font-mono text-xs text-white border-b-2 border-white pb-2 flex justify-between z-20 relative">
+                        <span></span><span>MAIN</span></div>
+                    <div class="relative z-20 text-white pointer-events-none mt-auto">
+                        <h3 class="font-display text-4xl font-bold uppercase mb-2 text-[#ff3c00] leading-none">
+                            씻을<br>타이밍인가?</h3>
+                        <p class="font-mono text-sm">Hygiene Checker</p>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1520333789090-1afc82db536a?q=80&w=1000&auto=format&fit=crop"
+                        class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-80 group-hover:scale-110 transition-all duration-700 ease-in-out z-10 pointer-events-none">
+                </div>
+                <div class="brutal-card orange-bg col-span-1 h-[300px] p-5 brutal-shadow group hover-trigger scroll-reveal"
+                    data-tilt data-type="excuse-gen">
+                    <div class="font-mono text-xs font-bold border-b-2 border-black pb-2"></div>
+                    <div class="relative z-10 mt-auto">
+                        <h3 class="font-display text-3xl font-black uppercase mb-1 leading-none roll-container"><span
+                                class="roll-inner"><span class="block">핑계<br>생성기</span><span
+                                    class="roll-copy">핑계<br>생성기</span></span></h3>
+                        <div class="chat-icon-svg"><svg viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M21 11.5C21.0039 12.8199 20.6957 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0035 9.87812 19.6954 8.7 19.1L3 21L4.9 15.3C4.3046 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.90003C9.87812 3.30461 11.1801 2.99656 12.5 3.00003H13C15.0843 3.11502 17.053 3.99479 18.5291 5.47089C20.0052 6.94699 20.885 8.91568 21 11V11.5Z"
+                                    stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M8 11h.01M12 11h.01M16 11h.01" stroke="black" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg></div>
+                    </div>
+                </div>
+                <div class="brutal-card white-bg col-span-1 h-[300px] p-5 brutal-shadow group hover-trigger scroll-reveal"
+                    data-tilt data-type="game-zone">
+                    <div class="font-mono text-xs border-b-2 border-black pb-2"></div>
+                    <div class="relative z-10 mt-auto">
+                        <h3 class="font-display text-3xl font-bold uppercase mb-1 leading-none roll-container"><span
+                                class="roll-inner"><span class="block">GAME<br>ZONE</span><span
+                                    class="roll-copy">GAME<br>ZONE</span></span></h3>
+                    </div>
+                    <div class="absolute top-5 right-5 text-4xl animate-spin-slow">🎲</div>
+                </div>
+                <div class="brutal-card black-bg col-span-1 h-[300px] p-5 brutal-shadow group hover-trigger scroll-reveal"
+                    data-tilt data-type="emotion-trash">
+                    <div class="font-mono text-xs border-b-2 border-white pb-2 text-white"></div>
+                    <div class="trash-container">
+                        <div class="trash-can-modern"></div>
+                        <div class="trash-emoji">😫</div>
+                        <div class="trash-emoji">🤬</div>
+                        <div class="trash-emoji">🤯</div>
+                    </div>
+                    <div class="relative z-10 mt-auto">
+                        <h3
+                            class="font-display text-3xl font-bold uppercase mb-1 text-[#ff3c00] leading-none roll-container">
+                            <span class="roll-inner"><span class="block">감정<br>쓰레기통</span><span
+                                    class="roll-copy">감정<br>쓰레기통</span></span></h3>
+                    </div>
+                </div>
+                <div class="brutal-card white-bg col-span-1 h-[300px] p-5 brutal-shadow group hover-trigger scroll-reveal"
+                    data-tilt data-type="roulette">
+                    <div class="font-mono text-xs text-black border-b-2 border-black pb-2 relative z-20"></div>
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+                        style="top: -20px;">
+                        <div class="eating-char-wrap">
+                            <div class="eating-char-front"></div>
+                            <div class="char-mouth"></div>
+                            <div class="char-hand left"></div>
+                            <div class="char-hand right"></div>
+                        </div>
+                    </div>
+                    <div class="relative z-20 mt-auto">
+                        <h3 class="font-display text-3xl font-bold uppercase mb-1 leading-none roll-container"><span
+                                class="roll-inner"><span class="block">냠냠<br>룰렛</span><span
+                                    class="roll-copy">냠냠<br>룰렛</span></span></h3>
+                    </div>
+                </div>
+                <div class="brutal-card h-[250px] col-span-2 md:col-span-4 flex items-center justify-center p-8 brutal-shadow group hover-trigger bg-[#e0e0e0] scroll-reveal"
+                    data-tilt data-type="contact">
+                    <h2
+                        class="font-display text-6xl md:text-8xl font-black text-center text-black transition-transform duration-500 roll-container">
+                        <span class="roll-inner"><span class="block">CONTACT</span><span
+                                class="roll-copy text-[#ff3c00]">CONTACT</span></span></h2>
+                </div>
+            </div>
+        </section>
+
+        <footer class="py-12 border-t-4 border-black font-mono text-xs flex justify-between content-wrapper">
+            <div>© 2026 VIBE CODING LAB</div>
+            <div class="hover-trigger cursor-pointer" onclick="window.scrollTo(0,0)">TOP</div>
+        </footer>
+    </div>
+
+    <script>
+        if (history.scrollRestoration) { history.scrollRestoration = "manual"; }
+        window.scrollTo(0, 0); window.onload = function () { setTimeout(function () { window.scrollTo(0, 0); }, 10); };
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        const cursor = document.getElementById('cursor');
+        const xTo = gsap.quickSetter(cursor, "x", "px"), yTo = gsap.quickSetter(cursor, "y", "px");
+        window.addEventListener("mousemove", e => { xTo(e.clientX); yTo(e.clientY); });
+
+        function updateHoverListeners() {
+            document.querySelectorAll('.hover-trigger').forEach(target => {
+                target.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+                target.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+            });
+        }
+        updateHoverListeners();
+
+        const introTl = gsap.timeline();
+        introTl.to(".loader-bar", { width: "100%", duration: 2.5, ease: "power2.inOut" })
+            .to(".loader-wrapper", { opacity: 0, duration: 0.5, display: "none" })
+            .to(".intro-content", { autoAlpha: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" });
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.body.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            document.getElementById('custom-scrollbar-thumb').style.height = scrollPercent + '%';
+        });
+
+        document.getElementById('enterBtn').addEventListener('click', () => {
+            gsap.to('#enterBtn', { scale: 1.5, opacity: 0, duration: 0.3 });
+            gsap.to('#intro-overlay', {
+                yPercent: -100, duration: 1.2, ease: "power4.inOut",
+                onComplete: () => {
+                    document.getElementById('intro-overlay').style.display = 'none';
+                    document.body.classList.remove('locked');
+                    initScrollAnimations();
+                }
+            });
+            gsap.to("#main-content", { opacity: 1, duration: 0.5, delay: 0.5 });
+        });
+
+        function initScrollAnimations() {
+            document.querySelectorAll(".scroll-reveal").forEach(el => {
+                ScrollTrigger.create({ trigger: el, start: "top 85%", onEnter: () => { gsap.to(el, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }); } });
+            });
+            gsap.to(".parallax-text", { scrollTrigger: { trigger: "header", start: "top top", end: "bottom top", scrub: true }, yPercent: 30 });
+            gsap.to(".parallax-bg", { scrollTrigger: { trigger: "header", start: "top top", end: "bottom top", scrub: true }, yPercent: 15 });
+        }
+        gsap.to(".marquee-content", { xPercent: -50, repeat: -1, duration: 10, ease: "linear" });
+
+        const detailOverlay = document.getElementById('detail-overlay');
+        const expandedCard = document.getElementById('expanded-card');
+        const views = {
+            normal: document.getElementById('normal-detail-view'),
+            game: document.getElementById('roulette-game-view'),
+            excuse: document.getElementById('excuse-gen-view'),
+            trash: document.getElementById('emotion-trash-view'),
+            gamezone: document.getElementById('game-zone-view'),
+            delivery: document.getElementById('delivery-regret-view'),
+            wash: document.getElementById('wash-timing-view')
+        };
+        const menuData = [{ name: "김치찌개" }, { name: "된장찌개" }, { name: "부대찌개" }, { name: "제육볶음" }, { name: "돈까스" }, { name: "비빔밥" }, { name: "칼국수" }, { name: "짜장면" }, { name: "짬뽕" }, { name: "햄버거" }, { name: "국밥" }, { name: "라멘" }, { name: "초밥" }, { name: "떡볶이" }, { name: "치킨" }, { name: "피자" }, { name: "파스타" }, { name: "쌀국수" }, { name: "마라탕" }, { name: "삼겹살" }];
+        let recentFoodIndices = [], recentTranslatorIndices = [], recentDiaryIndices = [], recentRestIndices = [];
+        const excuseHistory = {};
+
+        function getUniqueRandomIndex(dataLength, historyArray, limit) {
+            let randomIndex, attempts = 0;
+            do { randomIndex = Math.floor(Math.random() * dataLength); attempts++; }
+            while (historyArray.includes(randomIndex) && attempts < 50);
+            historyArray.push(randomIndex);
+            if (historyArray.length > limit) historyArray.shift();
+            return randomIndex;
+        }
+
+        function resetAllFeatures() {
+            // 룰렛
+            gsap.set('#wheel', { rotation: 0 }); gsap.set('#silver-dome', { y: 0, opacity: 1 }); gsap.set(".food-reveal", { opacity: 0 });
+            document.getElementById('roulette-stage').style.display = 'flex';
+            document.getElementById('dome-container').style.display = 'none';
+            document.getElementById('retry-btn').style.display = 'none';
+
+            // 핑계
+            document.getElementById('excuse-output').innerText = "핑계 생성 버튼을 눌러주세요...";
+
+            // 감정 쓰레기통
+            document.querySelectorAll('.feature-input').forEach(input => input.value = "");
+            document.querySelectorAll('.feature-result').forEach(box => {
+                if (box.querySelector('#rest-result-text')) {
+                    document.getElementById('rest-result-text').innerText = "버튼을 눌러 확인하세요.";
+                } else {
+                    box.innerText = "결과가 여기에 표시됩니다.";
+                }
+            });
+            document.getElementById('trash-menu-container').style.display = 'grid';
+            document.getElementById('trash-feature-container').style.display = 'none';
+            document.querySelectorAll('.feature-box').forEach(b => b.style.display = 'none');
+
+            // 게임 존
+            document.getElementById('game-menu-container').style.display = 'grid';
+            document.getElementById('pocket-money-game').style.display = 'none';
+            document.getElementById('pocket-setup').style.display = 'flex';
+            document.getElementById('pocket-play').style.display = 'none';
+            document.getElementById('decision-overlay').style.display = 'none';
+            pocketGameState.money = 10000; pocketGameState.streak = 0;
+            stopCpuAnimation();
+
+            const userHandEl = document.getElementById('user-hand-display');
+            userHandEl.innerText = "YOU";
+            userHandEl.style.fontSize = "1.5rem";
+
+            // 배달 & 씻기 초기화
+            document.getElementById('delivery-result').innerText = "";
+            document.getElementById('wash-result').innerText = "상태를 선택해주세요.";
+        }
+
+        document.querySelectorAll('.brutal-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const type = card.getAttribute('data-type');
+                Object.values(views).forEach(v => v.style.display = 'none');
+                resetAllFeatures();
+
+                if (type === 'roulette') { views.game.style.display = 'flex'; }
+                else if (type === 'excuse-gen') { views.excuse.style.display = 'flex'; }
+                else if (type === 'emotion-trash') {
+                    views.trash.style.display = 'flex';
+                    gsap.from(".trash-card", { y: 50, opacity: 0, duration: 0.6, stagger: 0.1, ease: "back.out(1.2)" });
+                }
+                else if (type === 'game-zone') {
+                    views.gamezone.style.display = 'flex';
+                    gsap.from(".game-card", { y: 50, opacity: 0, duration: 0.6, stagger: 0.1 });
+                }
+                else if (type === 'delivery') { views.delivery.style.display = 'flex'; }
+                else if (type === 'wash') { views.wash.style.display = 'flex'; }
+                else if (type === 'contact') {
+                    views.normal.style.display = 'flex';
+                    document.getElementById('detail-title').innerText = "CONTACT";
+                    document.getElementById('detail-desc').innerText = "Developer Info";
+                    // Contact 정보 주입
+                    document.getElementById('detail-body-text').innerHTML = `
+                        <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">이름: 서민관</div>
+                        <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">이메일: seo020901@gmail.com</div>
+                        <div style="font-size: 1.2rem;">대한민국</div>
+                    `;
+                    document.getElementById('detail-img').style.display = 'none';
+                }
+                else {
+                    // Fallback for any other cards
+                    views.normal.style.display = 'flex';
+                    const title = card.getAttribute('data-title');
+                    document.getElementById('detail-title').innerText = title;
+                    document.getElementById('detail-desc').innerText = card.getAttribute('data-subtitle');
+                    const imgSrc = card.getAttribute('data-img');
+                    if (imgSrc) { document.getElementById('detail-img').src = imgSrc; document.getElementById('detail-img').style.display = 'block'; }
+                    else { document.getElementById('detail-img').style.display = 'none'; }
+                    document.getElementById('detail-body-text').innerHTML = "<p>Lorem ipsum dolor sit amet.</p>";
+                }
+
+                document.body.classList.add('locked');
+                detailOverlay.classList.add('active');
+                gsap.fromTo(expandedCard, { width: "0%", height: "0%", opacity: 0 }, { width: "80%", height: "80%", opacity: 1, duration: 0.5, ease: "expo.out" });
+            });
+        });
+
+        function closeDetail() {
+            gsap.to(expandedCard, {
+                width: "0%", height: "0%", opacity: 0, duration: 0.3, ease: "power2.in",
+                onComplete: () => { detailOverlay.classList.remove('active'); document.body.classList.remove('locked'); }
+            });
+        }
+        document.getElementById('close-detail').addEventListener('click', closeDetail);
+
+        // --- 1. 룰렛 로직 ---
+        const wheel = document.getElementById('wheel');
+        const rouletteStage = document.getElementById('roulette-stage');
+        const domeContainer = document.getElementById('dome-container');
+        const silverDome = document.getElementById('silver-dome');
+        const foodResult = document.getElementById('food-result');
+        const retryBtn = document.getElementById('retry-btn');
+        function spinRoulette() {
+            gsap.to(wheel, {
+                rotation: 1080 + Math.random() * 360, duration: 2, ease: "power4.inOut",
+                onComplete: () => {
+                    gsap.to(rouletteStage, {
+                        opacity: 0, duration: 0.3, onComplete: () => {
+                            rouletteStage.style.display = 'none'; domeContainer.style.display = 'flex'; retryBtn.style.display = 'block';
+                            gsap.from(domeContainer, { scale: 0, duration: 0.5, ease: "back.out" });
+                            gsap.from(retryBtn, { y: 20, opacity: 0, delay: 0.2 });
+                            const randomIndex = getUniqueRandomIndex(menuData.length, recentFoodIndices, 15);
+                            foodResult.innerText = menuData[randomIndex].name;
+                            gsap.delayedCall(0.5, () => {
+                                gsap.to(silverDome, { y: -180, opacity: 0, duration: 0.8, ease: "power2.out" });
+                                gsap.to(".food-reveal", { opacity: 1, y: -20, duration: 0.5, delay: 0.2, ease: "back.out" });
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        wheel.addEventListener('click', spinRoulette);
+        retryBtn.addEventListener('click', () => { resetAllFeatures(); spinRoulette(); });
+
+        // --- 2. 핑계 생성기 로직 ---
+        const excuseData = {
+            late: { professor: ["교수님, 지하철이 고장나서 갇혀있습니다..", "어제 밤새 논문 읽다가 알람을 못 들었습니다."], friend: ["나오다가 신발끈 끊어짐", "버스 반대로 탔다... 금방 감"], senior: ["갑자기 교수님이 호출하셔서 늦을 것 같습니다 ㅠㅠ", "지하철 연착 때문에 예상이 안됩니다"], lover: ["준비하는데 머리가 안돼서 다시 감느라 늦었어", "꽃 사오려다 웨이팅이 길어서 ㅠㅠ"] },
+            contact: { professor: ["메일 확인이 늦어 죄송합니다. 연구 자료 정리하느라..", "핸드폰 액정이 깨져서 수리 맡기느라.."], friend: ["아 맞다 까먹음 ㅋㅋ 지금 봄", "유튜브 보다가 잠들었음 ㅈㅅ"], senior: ["과제 하느라 핸드폰을 아예 못 봤습니다!", "알림이 꺼져있어서 이제 확인했습니다"], lover: ["배터리가 나가서 꺼진 줄 몰랐어..", "일하느라 너무 정신이 없었어 ㅠㅠ"] },
+            cancel: { professor: ["갑작스럽게 몸살 기운이 심해져서..", "집안에 급한 사정이 생겨서.."], friend: ["나 오늘 갑자기 야근 확정됨...", "몸 상태가 너무 안 좋다 ㅠㅠ"], senior: ["갑자기 동아리 비상 소집이 잡혀서..", "몸이 너무 안 좋아서 병원 가봐야 할 것 같습니다"], lover: ["갑자기 열나고 몸이 너무 안 좋아 ㅠㅠ", "회사에 비상 걸려서 오늘 못 나갈 거 같아.."] }
+        };
+        let selectedSituation = 'late', selectedTarget = 'professor';
+        document.querySelectorAll('.excuse-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const group = e.target.closest('.excuse-select-group');
+                group.querySelectorAll('.excuse-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                if (btn.dataset.val) {
+                    if (group.id === 'situation-opts') selectedSituation = btn.dataset.val;
+                    else selectedTarget = btn.dataset.val;
+                }
+            });
+        });
+        document.getElementById('gen-excuse-btn').addEventListener('click', () => {
+            const outputBox = document.getElementById('excuse-output'); outputBox.innerText = "AI가 핑계를 계산 중입니다...";
+            setTimeout(() => {
+                const candidates = excuseData[selectedSituation][selectedTarget];
+                const key = `${selectedSituation}-${selectedTarget}`;
+                if (!excuseHistory[key]) excuseHistory[key] = [];
+                const idx = getUniqueRandomIndex(candidates.length, excuseHistory[key], 5);
+                outputBox.innerText = `"${candidates[idx]}"`;
+            }, 800);
+        });
+        document.getElementById('copy-excuse-btn').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('excuse-output').innerText.replace(/"/g, '')); alert("핑계가 복사되었습니다!");
+        });
+
+        // --- 3. 감정 쓰레기통 로직 ---
+        const trashMenu = document.getElementById('trash-menu-container');
+        const trashFeatures = document.getElementById('trash-feature-container');
+        document.querySelectorAll('.trash-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const tool = card.getAttribute('data-tool');
+                if (!tool) return;
+                trashMenu.style.display = 'none';
+                trashFeatures.style.display = 'flex';
+                document.querySelectorAll('.feature-box').forEach(b => b.style.display = 'none');
+                document.getElementById(`tool-ui-${tool}`).style.display = 'flex';
+                gsap.from(`#tool-ui-${tool}`, { y: 20, opacity: 0, duration: 0.4 });
+            });
+        });
+        document.getElementById('trash-back-btn').addEventListener('click', () => {
+            trashFeatures.style.display = 'none'; trashMenu.style.display = 'grid';
+        });
+
+        // 감정 번역기
+        document.getElementById('btn-translate').addEventListener('click', () => {
+            const input = document.querySelector('#tool-ui-translator textarea').value;
+            const resultBox = document.querySelector('#tool-ui-translator .feature-result');
+            resultBox.innerText = "분석 중...";
+            const text = input || "그냥 기분이 좀 그렇네";
+
+            setTimeout(() => {
+                let responses;
+                if (text.match(/빡쳐|짜증|화나|개새|미친|죽어|시발|존나/)) {
+                    responses = [
+                        "저의 인내심이 바닥나기 일보 직전이오니, 부디 생존 본능을 발휘하여 자제해 주시길 간곡히 부탁드립니다.",
+                        "귀하의 피드백은 저의 감정 처리 장치에 과부하를 일으키고 있습니다.",
+                        "지금 하신 말씀은 제 멘탈에 치명적인 오류를 발생시킬 뻔했습니다."
+                    ];
+                } else if (text.match(/슬퍼|우울|힘들어|지쳐|눈물|괴로워/)) {
+                    responses = [
+                        "지금 당신에게 필요한 것은 논리가 아니라 따뜻한 코코아 한 잔입니다.",
+                        "잠시 세상의 모든 짐을 내려놓고, 멍때리기 모드로 전환하십시오.",
+                        "당신의 눈물은 나약함의 증거가 아니라, 치열하게 살았다는 훈장입니다."
+                    ];
+                } else {
+                    responses = [
+                        "귀하의 의견은 제 마음속 휴지통으로 안전하게 이동되었습니다.",
+                        "지금은 대화하기에 적절한 타이밍이 아닌 것 같습니다.",
+                        "말씀하신 내용은 심도 있게 검토해보겠으나, 확답은 어렵습니다."
+                    ];
+                }
+                const idx = getUniqueRandomIndex(responses.length, recentTranslatorIndices, 5);
+                resultBox.innerText = `"${responses[idx]}"`;
+            }, 1000);
+        });
+
+        // 기억 왜곡 일기
+        document.getElementById('btn-distort').addEventListener('click', () => {
+            const input = document.querySelector('#tool-ui-diary textarea').value;
+            const resultBox = document.querySelector('#tool-ui-diary .feature-result');
+            resultBox.innerText = "미화 중...";
+            const text = input || "오늘 하루 망했어";
+
+            setTimeout(() => {
+                let responses;
+                if (text.match(/넘어|다쳐|피|아파|깨져|부러|실수/)) {
+                    responses = [
+                        "오늘 나는 중력의 법칙을 온몸으로 거스르려다 장렬히 대지와 키스했다.",
+                        "나의 실수는 훗날 자서전의 '인간미' 챕터를 장식할 귀여운 에피소드일 뿐이다.",
+                        "상처는 훈장이요, 고통은 성장의 거름이다. 나는 오늘 한 뼘 더 자랐다."
+                    ];
+                } else if (text.match(/돈|비싸|잃어|거지|잔고/)) {
+                    responses = [
+                        "지갑이 가벼워진 것은, 내 영혼의 무게를 더하기 위한 우주의 섭리였다.",
+                        "나는 오늘 무소유의 기쁨을 실천하며 자본주의의 굴레에서 잠시 벗어났다.",
+                        "비싼 수업료를 지불했으니, 이제 나는 인생의 지혜를 얻은 현자가 되었다."
+                    ];
+                } else {
+                    responses = [
+                        "오늘 겪은 시련은 내가 주인공인 이 영화의 흥행을 위한 빌드업 과정이었다.",
+                        "비록 오늘은 패배한 듯 보이나, 나는 내일의 승리를 위해 잠시 웅크렸을 뿐이다.",
+                        "평범한 하루였으나, 나는 그 속에서 비범한 깨달음을 얻은 철학자가 되었다."
+                    ];
+                }
+                const idx = getUniqueRandomIndex(responses.length, recentDiaryIndices, 5);
+                resultBox.innerText = `"${responses[idx]}"`;
+            }, 1000);
+        });
+
+        // 휴식 판독기
+        document.getElementById('btn-rest-check').addEventListener('click', () => {
+            const inputEl = document.getElementById('input-rest');
+            const input = inputEl.value;
+            const resultBox = document.getElementById('rest-result-text');
+            resultBox.innerHTML = "<span style='color:#aaa'>데이터 분석 중...</span>";
+            setTimeout(() => {
+                let reason = "";
+                if (!input || input.trim() === "") reason = "숨쉬기도 노동입니다. 존재만으로도 휴식이 필요합니다.";
+                else if (input.match(/비|눈|흐림|추워|더워|날씨/)) reason = "기상 악화로 인한 야외 활동 불가 판정.";
+                else if (input.match(/피곤|아파|힘들/)) reason = "생체 에너지 고갈로 인한 긴급 충전 요망.";
+                else reason = "우주의 기운이 당신에게 '멈춤' 신호를 보내는 중.";
+                resultBox.innerHTML = `<span class='rest-highlight'>승인되었습니다.</span>${reason}<br>아무도 당신을 비난하지 않습니다.`;
+            }, 1000);
+        });
+
+        // --- 4. 용돈 정하기 게임 로직 ---
+        let pocketGameState = { money: 10000, streak: 0, maxMoney: 0, type: 'normal' };
+        let rpsInterval;
+
+        document.querySelectorAll('.pocket-type-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.getAttribute('data-type');
+                const holiday = btn.getAttribute('data-holiday');
+                if (type) {
+                    document.querySelectorAll('.pocket-type-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    if (type === 'holiday') document.getElementById('holiday-options').style.display = 'flex';
+                    else document.getElementById('holiday-options').style.display = 'none';
+                    pocketGameState.type = type;
+                } else if (holiday) {
+                    document.querySelectorAll('#holiday-options .pocket-type-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    pocketGameState.type = holiday;
+                }
+            });
+        });
+
+        document.getElementById('start-pocket-game').addEventListener('click', () => {
+            const maxInput = document.getElementById('max-money').value;
+            pocketGameState.maxMoney = parseInt(maxInput) || 100000;
+            pocketGameState.money = 10000;
+            pocketGameState.streak = 0;
+
+            const playArea = document.getElementById('pocket-play');
+            playArea.className = '';
+            if (pocketGameState.type === 'seollal') playArea.classList.add('bg-seollal');
+            else if (pocketGameState.type === 'chuseok') playArea.classList.add('bg-chuseok');
+            else playArea.classList.add('bg-normal');
+
+            document.getElementById('pocket-setup').style.display = 'none';
+            playArea.style.display = 'flex';
+            updatePocketUI();
+            startCpuAnimation();
+        });
+
+        function updatePocketUI() {
+            document.getElementById('current-money').innerText = pocketGameState.money.toLocaleString() + '원';
+            document.getElementById('streak-info').innerText = `연승: ${pocketGameState.streak}`;
+            if (pocketGameState.streak >= 5) document.getElementById('double-event-notice').style.display = 'block';
+            else document.getElementById('double-event-notice').style.display = 'none';
+        }
+
+        function startCpuAnimation() {
+            const hands = ['✊', '🖐️', '✌️'];
+            const cpuHandEl = document.getElementById('cpu-hand');
+            if (rpsInterval) clearInterval(rpsInterval);
+            rpsInterval = setInterval(() => {
+                cpuHandEl.innerText = hands[Math.floor(Math.random() * 3)];
+            }, 100);
+            document.getElementById('game-message').innerText = "가위, 바위, 보!";
+
+            const userHandEl = document.getElementById('user-hand-display');
+            userHandEl.innerText = "YOU";
+            userHandEl.style.fontSize = "1.5rem";
+        }
+        function stopCpuAnimation() {
+            if (rpsInterval) clearInterval(rpsInterval);
+        }
+
+        document.querySelectorAll('.rps-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const userChoice = btn.getAttribute('data-choice');
+                playRPS(userChoice);
+            });
+        });
+
+        function playRPS(userChoice) {
+            stopCpuAnimation();
+
+            const hands = ['rock', 'paper', 'scissors'];
+            const cpuChoice = hands[Math.floor(Math.random() * 3)];
+            const handEmoji = { rock: '✊', paper: '🖐️', scissors: '✌️' };
+
+            const userHandEl = document.getElementById('user-hand-display');
+            userHandEl.innerText = handEmoji[userChoice];
+            userHandEl.style.fontSize = '4rem';
+
+            document.getElementById('cpu-hand').innerText = handEmoji[cpuChoice];
+
+            let result = '';
+            if (userChoice === cpuChoice) result = 'draw';
+            else if ((userChoice === 'rock' && cpuChoice === 'scissors') || (userChoice === 'paper' && cpuChoice === 'rock') || (userChoice === 'scissors' && cpuChoice === 'paper')) result = 'win';
+            else result = 'lose';
+
+            const msg = document.getElementById('game-message');
+
+            if (result === 'win') {
+                let gain = 10000;
+                if (pocketGameState.streak >= 5) gain = pocketGameState.money;
+
+                if (pocketGameState.money + gain > pocketGameState.maxMoney) {
+                    pocketGameState.money = pocketGameState.maxMoney;
+                    showDecisionOverlay("MAX LIMIT!", "축하합니다! 최대 금액에 도달했습니다.<br>더 이상 진행할 수 없습니다.", false);
+                    return;
+                }
+
+                pocketGameState.money += gain;
+                pocketGameState.streak++;
+                msg.innerText = "승리! (+ " + gain.toLocaleString() + "원)";
+                updatePocketUI();
+
+                setTimeout(() => {
+                    showDecisionOverlay("NICE WIN!", `현재 누적: ${pocketGameState.money.toLocaleString()}원<br>계속 도전하시겠습니까?`, true);
+                }, 800);
+
+            } else if (result === 'lose') {
+                msg.innerText = "패배...";
+                let failMsg = "아쉽네요. 1만원만 가져갑니다.";
+                if (pocketGameState.money > 10000) failMsg = "욕심이 과했습니다. 0원으로 돌아갈 뻔했으나<br>최소 금액 1만원은 드립니다.";
+
+                pocketGameState.money = 10000;
+                pocketGameState.streak = 0;
+                updatePocketUI();
+
+                setTimeout(() => {
+                    showDecisionOverlay("GAME OVER", failMsg, false);
+                }, 800);
+
+            } else {
+                msg.innerText = "비겼습니다! 다시 하세요.";
+                setTimeout(() => { startCpuAnimation(); }, 1000);
+            }
+        }
+
+        const decisionOverlay = document.getElementById('decision-overlay');
+        const btnStop = document.getElementById('btn-stop-game');
+        const btnContinue = document.getElementById('btn-continue-game');
+
+        function showDecisionOverlay(title, msg, canContinue) {
+            document.getElementById('decision-title').innerText = title;
+            document.getElementById('decision-message').innerHTML = msg;
+
+            if (canContinue) {
+                btnStop.style.display = 'block';
+                btnStop.innerText = "그만 받기 (STOP)";
+                btnContinue.style.display = 'block';
+                btnContinue.innerText = "더 도전하기 (GO)";
+
+                btnStop.onclick = () => {
+                    alert(`${pocketGameState.money.toLocaleString()}원 획득! 게임을 종료합니다.`);
+                    resetAllFeatures();
+                };
+                btnContinue.onclick = () => {
+                    decisionOverlay.style.display = 'none';
+                    startCpuAnimation();
+                };
+            } else {
+                btnStop.style.display = 'block';
+                btnStop.innerText = "메뉴로 나가기";
+                btnContinue.style.display = 'none';
+
+                btnStop.onclick = () => { resetAllFeatures(); };
+            }
+            decisionOverlay.style.display = 'flex';
+        }
+
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const game = card.getAttribute('data-game');
+                if (!game) return;
+                document.getElementById('game-menu-container').style.display = 'none';
+                document.getElementById('pocket-money-game').style.display = 'flex';
+            });
+        });
+
+        // --- 5. 배달 후회 판독기 ---
+        document.getElementById('btn-calc-regret').addEventListener('click', () => {
+            const hour = new Date().getHours();
+            let probability = 0;
+            let msg = "";
+
+            if (hour >= 22 || hour <= 4) { // 야식 시간
+                probability = Math.floor(Math.random() * 20) + 80; // 80~99%
+                msg = "지금은 야식의 유혹이 가장 강할 때입니다. 하지만 아침에 얼굴 붓기를 생각하세요.";
+            } else if (hour >= 11 && hour <= 13) { // 점심
+                probability = Math.floor(Math.random() * 30); // 0~30%
+                msg = "점심은 먹어야죠. 합리적인 소비입니다.";
+            } else if (hour >= 17 && hour <= 19) { // 저녁
+                probability = Math.floor(Math.random() * 40);
+                msg = "오늘 하루 고생한 나에게 주는 선물이라면 인정합니다.";
+            } else { // 애매한 시간
+                probability = Math.floor(Math.random() * 50) + 30;
+                msg = "지금 배가 고픈 건지, 그냥 입이 심심한 건지 다시 생각해보세요.";
+            }
+
+            document.getElementById('delivery-result').innerHTML = `후회 확률: ${probability}%<br><span style='font-size:1rem; color:white; opacity:0.8'>${msg}</span>`;
+        });
+
+        // --- 6. 씻을 타이밍 계산기 ---
+        document.querySelectorAll('.wash-opt').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = btn.getAttribute('data-val');
+                let resultText = "";
+                if (val === 'out') resultText = "나가기 직전에 씻는 게 국룰입니다. 지금은 누워계세요.";
+                else if (val === 'home') resultText = "집에만 있는데 왜 씻죠? 물 아끼세요.";
+                else if (val === 'back') resultText = "침대에 눕기 전, 지금 당장 씻어야 인간의 존엄성을 지킬 수 있습니다.";
+
+                document.getElementById('wash-result').innerText = resultText;
+            });
+        });
+
+        const menuToggle = document.getElementById('menuToggle');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const navbar = document.getElementById('navbar');
+        const menuLinks = document.querySelectorAll('.menu-link');
+        let isMenuOpen = false;
+
+        menuToggle.addEventListener('click', () => {
+            if (!isMenuOpen) {
+                menuOverlay.style.display = 'flex';
+                document.body.classList.add('locked');
+                navbar.style.backgroundColor = 'transparent';
+                navbar.style.borderBottomColor = 'transparent';
+                gsap.to(menuOverlay, { opacity: 1, duration: 0.5 });
+                gsap.fromTo(menuLinks, { y: 50, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.1, duration: 0.5, delay: 0.2 });
+                menuToggle.innerText = "[ CLOSE ]";
+                isMenuOpen = true;
+            } else {
+                document.body.classList.remove('locked');
+                navbar.style.backgroundColor = '#e0e0e0';
+                navbar.style.borderBottomColor = 'black';
+                gsap.to(menuOverlay, { opacity: 0, duration: 0.5, onComplete: () => { menuOverlay.style.display = 'none'; } });
+                menuToggle.innerText = "[ MENU ]";
+                isMenuOpen = false;
+            }
+        });
+    </script>
+</body>
+
+</html>
